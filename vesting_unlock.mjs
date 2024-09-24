@@ -9,7 +9,7 @@ import {
 } from '@meshsdk/core';
 import fs from 'node:fs';
 
-const blockchainProvider = new BlockfrostProvider("previewLt92UHMcVeEcdEZCQvfo0xlbQyFsuQKm");
+const blockchainProvider = new BlockfrostProvider(process.env.BLOCKFROST_API_KEY);
 
 const owner_wallet = new MeshWallet({
     networkId: 0,
