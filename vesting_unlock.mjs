@@ -9,7 +9,7 @@ import {
 } from '@meshsdk/core';
 import fs from 'node:fs';
 
-const blockchainProvider = new BlockfrostProvider(process.env.BLOCKFROST_API_KEY);
+const blockchainProvider = new BlockfrostProvider('preview7PLNKqjXEZB1xq3BYKSSMgDNtj4KXr7m');
 
 const owner_wallet = new MeshWallet({
     networkId: 0,
@@ -43,7 +43,7 @@ const script = {
 async function fetchUtxo(addr) {
   const utxos = await blockchainProvider.fetchAddressUTxOs(addr);
   return utxos.find((utxo) => {
-    return utxo.input.txHash == 'c9520ed52c4674192fa42c046d5300ac7d44494471803c5724ef9dd6018c344a';
+    return utxo.input.txHash == 'd424b1a241e68ef8db4f9ee56020292e6ed3744e6b1277cdac53365378646321';
   });
 }
 
@@ -60,7 +60,8 @@ const currentTime = new Date().getTime();
 const laterTime = new Date(currentTime + 2 * 60 * 60 * 1000).getTime();
 const datum = {
   alternative: 0,
-  fields: [owner, beneficiary, laterTime]
+  fields: [owner, beneficiary, laterTime],
+  inline:true
 };
 
 const redeemer = {

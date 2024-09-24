@@ -8,7 +8,7 @@ import {
 } from '@meshsdk/core';
 import fs from 'node:fs';
    
-const blockchainProvider = new BlockfrostProvider(process.env.BLOCKFROST_API_KEY);
+const blockchainProvider = new BlockfrostProvider('preview7PLNKqjXEZB1xq3BYKSSMgDNtj4KXr7m');
 
 const owner_wallet = new MeshWallet({
   networkId: 0,
@@ -50,7 +50,8 @@ const datum = {
   redeemer: {
     data: {
       alternative: 0,
-     fields: ['redeem_stock_options'],
+      fields: ['redeem_stock_options'],
+      inline: true
     },
   }
 }
