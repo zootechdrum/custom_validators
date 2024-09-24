@@ -1,0 +1,92 @@
+{
+  "preamble": {
+    "title": "aiken-lang/custom_validators",
+    "description": "Aiken contracts for project 'aiken-lang/custom_validators'",
+    "version": "0.0.0",
+    "plutusVersion": "v3",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.1.2+7047c77"
+    },
+    "license": "Apache-2.0"
+  },
+  "validators": [
+    {
+      "title": "vesting.vesting.spend",
+      "datum": {
+        "title": "datum",
+        "schema": {
+          "$ref": "#/definitions/vesting~1Datum"
+        }
+      },
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/vesting~1Redeemer"
+        }
+      },
+      "compiledCode": "59019001010032323232323225333002323232323253330073370e900118041baa0011323232533300a3370e900018059baa00513232533300f30110021533300c3370e900018069baa003132323232323232323253330155333015002100514a0294454ccc05400854ccc05401040045280a5033223253330173370e9001180c1baa0011337120046eb4c06cc064dd50008a50300430183754600860306ea8008c060c064c064c064c064c064c064c064c058dd50089bad30180083371e6eb8c004c054dd500724411072656465656d5f676966745f636172640023017001330023758600660266ea8038dd7180a980b002198009bac30023012375401a6eb8c05000c88c8cc00400400c894ccc058004528099299980a19b8f375c603000400829444cc00c00c004c0600048c04cc050c050c050c050c050c050c050c050004c048004c038dd5180818071baa0031616375c601e00260186ea801458c034c038008c030004c024dd50008b1805180580118048009804801180380098021baa00114984d9595cd2ab9d5573caae7d5d0aba21",
+      "hash": "09a774d3bcfb67995c79c3104274da703c07b8570dadc55c6dd61a2a"
+    },
+    {
+      "title": "vesting.vesting.else",
+      "compiledCode": "59019001010032323232323225333002323232323253330073370e900118041baa0011323232533300a3370e900018059baa00513232533300f30110021533300c3370e900018069baa003132323232323232323253330155333015002100514a0294454ccc05400854ccc05401040045280a5033223253330173370e9001180c1baa0011337120046eb4c06cc064dd50008a50300430183754600860306ea8008c060c064c064c064c064c064c064c064c058dd50089bad30180083371e6eb8c004c054dd500724411072656465656d5f676966745f636172640023017001330023758600660266ea8038dd7180a980b002198009bac30023012375401a6eb8c05000c88c8cc00400400c894ccc058004528099299980a19b8f375c603000400829444cc00c00c004c0600048c04cc050c050c050c050c050c050c050c050004c048004c038dd5180818071baa0031616375c601e00260186ea801458c034c038008c030004c024dd50008b1805180580118048009804801180380098021baa00114984d9595cd2ab9d5573caae7d5d0aba21",
+      "hash": "09a774d3bcfb67995c79c3104274da703c07b8570dadc55c6dd61a2a"
+    }
+  ],
+  "definitions": {
+    "ByteArray": {
+      "dataType": "bytes"
+    },
+    "POSIXTime": {
+      "title": "POSIXTime",
+      "dataType": "integer"
+    },
+    "VerificationKeyHash": {
+      "title": "VerificationKeyHash",
+      "dataType": "bytes"
+    },
+    "vesting/Datum": {
+      "title": "Datum",
+      "anyOf": [
+        {
+          "title": "Datum",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "lock_until",
+              "description": "Owner's credentials",
+              "$ref": "#/definitions/POSIXTime"
+            },
+            {
+              "title": "owner",
+              "$ref": "#/definitions/VerificationKeyHash"
+            },
+            {
+              "title": "beneficiary",
+              "description": "Beneficiary's credentials",
+              "$ref": "#/definitions/VerificationKeyHash"
+            }
+          ]
+        }
+      ]
+    },
+    "vesting/Redeemer": {
+      "title": "Redeemer",
+      "anyOf": [
+        {
+          "title": "Redeemer",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "msg",
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

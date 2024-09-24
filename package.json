@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@emurgo/cardano-serialization-lib-nodejs": "^12.1.0",
+    "@meshsdk/contract": "^1.7.6",
+    "cbor": "^9.0.2"
+  }
+}
