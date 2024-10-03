@@ -1,15 +1,19 @@
 import cbor from "cbor";
 import {
-  resolvePaymentKeyHash,
   resolvePlutusScriptAddress,
   BlockfrostProvider,
-  resolveDataHash,
   MeshWallet,
   Transaction,
+  
 } from '@meshsdk/core';
+
+import {
+  deserializePlutusData
+} from '@meshsdk/core-csl'
 import fs from 'node:fs';
 
-const blockchainProvider = new BlockfrostProvider('preview7PLNKqjXEZB1xq3BYKSSMgDNtj4KXr7m');
+const blockchainProvider = new BlockfrostProvider('previewTcK4lCRJfj0OvZSeGjANO5DWe3BNYMCR');
+
 
 const owner_wallet = new MeshWallet({
     networkId: 0,
@@ -31,6 +35,9 @@ const beneficiary_wallet = new MeshWallet({
     },
   });
 
+// const utxos = await beneficiary_wallet.getUtxos()
+
+const beneficiaryAddress = (await beneficiary_wallet.getUsedAddresses())[0];
 const blueprint = JSON.parse(fs.readFileSync('./plutus.json'));
  
 const script = {
@@ -40,57 +47,17 @@ const script = {
   version: "V3",
 };
 
-async function fetchUtxo(addr) {
-  const utxos = await blockchainProvider.fetchAddressUTxOs(addr);
-  return utxos.find((utxo) => {
-    return utxo.input.txHash == 'd424b1a241e68ef8db4f9ee56020292e6ed3744e6b1277cdac53365378646321';
-  });
-}
 
-const utxo = await fetchUtxo(resolvePlutusScriptAddress(script, 0))
+let address = resolvePlutusScriptAddress(script, 0);
 
-const b_address = (await beneficiary_wallet.getUsedAddresses())[0];
+const txHashFromDeposit = "95e8cfa40ade79399da420a39223a23d380b2487143e4505353938a83f923a16";
 
-const o_address = (await owner_wallet.getUsedAddresses())[0];
+const utxos = await blockchainProvider.fetchUTxOs(txHashFromDeposit) 
+const vestingUtxo = utxos[0];
 
-const beneficiary = resolvePaymentKeyHash(b_address)
-const owner = resolvePaymentKeyHash(o_address)
+const collateral = await beneficiary_wallet.getCollateral()
 
-const currentTime = new Date().getTime();
-const laterTime = new Date(currentTime + 2 * 60 * 60 * 1000).getTime();
-const datum = {
-  alternative: 0,
-  fields: [owner, beneficiary, laterTime],
-  inline:true
-};
+const {input: collateralInput, output: collateralOutput} = collateral[0];
 
-const redeemer = {
-  data: {
-    alternative: 0,
-   fields: ['redeem_stock_options'],
-  },
-}
-
-
-// fetch input UTXO
-  
-  const unsignedTx = await new Transaction({ initiator: beneficiary_wallet })
-  .redeemValue({
-    value: utxo,
-    script: script,
-    datum: datum,
-    redeemer: redeemer
-  }).sendValue(b_address, utxo)
-  .setRequiredSigners([b_address])
-  .build();
-
-  const signedTx = await beneficiary_wallet.signTx(unsignedTx, true);
-  try {
-    const txHash = await beneficiary_wallet.submitTx(signedTx);
-    console.log(`1 tADA unlocked from the contract at:
-      Tx ID: ${txHash}
-  `);
-  } catch (error) {
-    console.log(error);
-  }
-   
+const datum = deserializePlutusData(vestingUtxo.output.plutusData);
+console.log(datum)
