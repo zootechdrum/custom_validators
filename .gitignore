@@ -6,3 +6,4 @@ build/
 docs/
 
 node_modules/
+.env

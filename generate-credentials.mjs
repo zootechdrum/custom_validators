@@ -22,6 +22,7 @@ const beneficiary_wallet = new MeshWallet({
     bech32: beneficiary_secret_key,
   },
 });
+
  
 fs.writeFileSync('owner.addr', owner_wallet.getUnusedAddresses()[0]);
 fs.writeFileSync('beneficiary.addr', beneficiary_wallet.getUnusedAddresses()[0]);

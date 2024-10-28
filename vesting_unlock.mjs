@@ -1,63 +1,83 @@
-import cbor from "cbor";
 import {
-  resolvePlutusScriptAddress,
-  BlockfrostProvider,
-  MeshWallet,
-  Transaction,
-  
-} from '@meshsdk/core';
+  deserializeAddress,
+  deserializeDatum,
+  unixTimeToEnclosingSlot,
+  SLOT_CONFIG_NETWORK,
+} from "@meshsdk/core";
+import fs from "node:fs";
 
-import {
-  deserializePlutusData
-} from '@meshsdk/core-csl'
-import fs from 'node:fs';
-
-const blockchainProvider = new BlockfrostProvider('previewTcK4lCRJfj0OvZSeGjANO5DWe3BNYMCR');
+import {getTxBuilder, beneficiary_wallet, scriptAddr, scriptCbor,blockchainProvider } from "./common/common.mjs";
 
 
-const owner_wallet = new MeshWallet({
-    networkId: 0,
-    fetcher: blockchainProvider,
-    submitter: blockchainProvider,
-    key: {
-      type: 'root',
-      bech32: fs.readFileSync('owner.sk').toString(),
-    },
-  });
+async function withdrawFundTx(vestingUtxo) {
+  const utxos = await beneficiary_wallet.getUtxos();
+  const beneficiaryAddress = beneficiary_wallet.addresses.baseAddressBech32;
+  const collateral  = await beneficiary_wallet.getCollateral();
+  const collateralInput = collateral[0].input;
+  const collateralOutput = collateral[0].output;
 
-const beneficiary_wallet = new MeshWallet({
-    networkId: 0,
-    fetcher: blockchainProvider,
-    submitter: blockchainProvider,
-    key: {
-      type: 'root',
-      bech32: fs.readFileSync('beneficiary.sk').toString(),
-    },
-  });
+  const { pubKeyHash: beneficiaryPubKeyHash } = deserializeAddress(
+    beneficiary_wallet.addresses.baseAddressBech32
+  );
 
-// const utxos = await beneficiary_wallet.getUtxos()
+  const datum = deserializeDatum(vestingUtxo.output.plutusData);
 
-const beneficiaryAddress = (await beneficiary_wallet.getUsedAddresses())[0];
-const blueprint = JSON.parse(fs.readFileSync('./plutus.json'));
- 
-const script = {
-  code: cbor
-    .encode(Buffer.from(blueprint.validators[0].compiledCode, "hex"))
-    .toString("hex"),
-  version: "V3",
-};
+  const invalidBefore =
+    unixTimeToEnclosingSlot(
+      Math.min(datum.fields[0].int, Date.now() - 19000),
+      SLOT_CONFIG_NETWORK.preview
+    ) + 1;
 
+  const txBuilder = getTxBuilder();
+  await txBuilder
+    .spendingPlutusScript("V3")
+    .txIn(
+      vestingUtxo.input.txHash,
+      vestingUtxo.input.outputIndex,
+      vestingUtxo.output.amount,
+      scriptAddr
+    )
+    .spendingReferenceTxInInlineDatumPresent()
+    .spendingReferenceTxInRedeemerValue("")
+    .txInScript(scriptCbor)
+    .txOut(beneficiaryAddress, [])
+    .txInCollateral(
+      collateralInput.txHash,
+      collateralInput.outputIndex,
+      collateralOutput.amount,
+      collateralOutput.address
+    )
+    .invalidBefore(invalidBefore)
+    .requiredSignerHash(beneficiaryPubKeyHash)
+    .changeAddress(beneficiaryAddress)
+    .selectUtxosFrom(utxos)
+    .complete();
+  return txBuilder.txHex;
+}
 
-let address = resolvePlutusScriptAddress(script, 0);
+async function main() {
+  const txHashFromDesposit =
+  //This is the hash of the tx that we want to unlock
+    "ed7559c7aa5a8bfcba9ec8d75fb2ee1902da8b909722ca4726261d35e8250645";
 
-const txHashFromDeposit = "95e8cfa40ade79399da420a39223a23d380b2487143e4505353938a83f923a16";
+  const utxo = await getUtxoByTxHash(txHashFromDesposit);
 
-const utxos = await blockchainProvider.fetchUTxOs(txHashFromDeposit) 
-const vestingUtxo = utxos[0];
+  if (utxo === undefined) throw new Error("UTxO not found");
 
-const collateral = await beneficiary_wallet.getCollateral()
+  const unsignedTx = await withdrawFundTx(utxo);
 
-const {input: collateralInput, output: collateralOutput} = collateral[0];
+  const signedTx = await beneficiary_wallet.signTx(unsignedTx);
 
-const datum = deserializePlutusData(vestingUtxo.output.plutusData);
-console.log(datum)
+  const txHash = await beneficiary_wallet.submitTx(signedTx);
+  console.log("txHash", txHash);
+}
+
+async function getUtxoByTxHash(txHash) {
+  const utxos = await blockchainProvider.fetchUTxOs(txHash);
+  if (utxos.length === 0) {
+    throw new Error("UTxO not found");
+  }
+  return utxos[0];
+}
+
+main();
