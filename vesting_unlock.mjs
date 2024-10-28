@@ -4,7 +4,6 @@ import {
   unixTimeToEnclosingSlot,
   SLOT_CONFIG_NETWORK,
 } from "@meshsdk/core";
-import fs from "node:fs";
 
 import {getTxBuilder, beneficiary_wallet, scriptAddr, scriptCbor,blockchainProvider } from "./common/common.mjs";
 
